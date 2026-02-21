@@ -98,30 +98,35 @@ const drivers = [
   {
     name: 'Robert Johnson',
     licenseCategory: 'A',
+    licenseNumber: 'DL-2024-001234',
     licenseExpiryDate: futureDate,
     status: 'Available'
   },
   {
     name: 'Maria Garcia',
     licenseCategory: 'B',
+    licenseNumber: 'DL-2024-005678',
     licenseExpiryDate: futureDate,
     status: 'Available'
   },
   {
     name: 'James Williams',
     licenseCategory: 'C',
+    licenseNumber: 'DL-2024-009012',
     licenseExpiryDate: futureDate,
     status: 'Available'
   },
   {
     name: 'Linda Davis',
     licenseCategory: 'B',
+    licenseNumber: 'DL-2024-003456',
     licenseExpiryDate: futureDate,
     status: 'Available'
   },
   {
     name: 'Michael Brown',
     licenseCategory: 'A',
+    licenseNumber: 'DL-2024-007890',
     licenseExpiryDate: futureDate,
     status: 'Available'
   }
@@ -171,6 +176,7 @@ const seedDatabase = async () => {
         toLocation: 'Distribution Hub B, Industrial Zone',
         startOdometer: 150000,
         endOdometer: 150250,
+        revenue: 25000,
         status: 'Completed'
       },
       {
@@ -180,6 +186,7 @@ const seedDatabase = async () => {
         fromLocation: 'Store 1, Downtown',
         toLocation: 'Customer Location, Suburbs',
         startOdometer: 75000,
+        revenue: 8000,
         status: 'Draft'
       }
     ];

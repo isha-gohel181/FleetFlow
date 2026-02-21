@@ -25,7 +25,7 @@ const navItems = [
     name: 'Dashboard',
     path: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['FleetManager', 'Dispatcher', 'SafetyOfficer', 'FinancialAnalyst']
+    roles: ['FleetManager', 'FinancialAnalyst']
   },
   {
     name: 'Vehicles',

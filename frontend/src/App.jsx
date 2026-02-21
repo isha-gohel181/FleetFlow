@@ -3,10 +3,11 @@
  * Sets up routing and auth context
  */
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { AppLayout, ProtectedRoute } from '@/components/layout';
 import { 
   LoginPage, 
+  RegisterPage,
   DashboardPage, 
   VehiclesPage, 
   DriversPage, 
@@ -16,6 +17,23 @@ import {
   AnalyticsPage 
 } from '@/pages';
 
+// Smart redirect based on user role
+function RoleBasedRedirect() {
+  const { user } = useAuth();
+  
+  if (!user) return <Navigate to="/login" replace />;
+  
+  // Redirect based on role
+  if (user.role === 'FleetManager' || user.role === 'FinancialAnalyst') {
+    return <Navigate to="/dashboard" replace />;
+  } else if (user.role === 'Dispatcher' || user.role === 'SafetyOfficer') {
+    return <Navigate to="/vehicles" replace />;
+  }
+  
+  // Default to vehicles
+  return <Navigate to="/vehicles" replace />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -23,6 +41,7 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           
           {/* Protected routes with layout */}
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -36,8 +55,9 @@ function App() {
             <Route path="/analytics" element={<AnalyticsPage />} />
           </Route>
           
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {/* Default redirect based on role */}
+          <Route path="/" element={<RoleBasedRedirect />} />
+          <Route path="*" element={<RoleBasedRedirect />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

@@ -95,10 +95,10 @@ export default function AnalyticsPage() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-900/90 backdrop-blur-md border border-white/10 p-3 rounded-lg shadow-xl">
-          <p className="text-gray-400 text-xs font-medium mb-1">{label}</p>
+        <div className="bg-[#1F2937] border border-white/20 p-3 rounded-lg shadow-2xl">
+          <p className="text-gray-300 text-sm font-semibold mb-2">{label}</p>
           {payload.map((entry, index) => (
-            <p key={index} className="text-sm font-bold" style={{ color: entry.color }}>
+            <p key={index} className="text-sm font-bold mb-1" style={{ color: entry.color }}>
               {entry.name}: {entry.name.includes('Cost') || entry.name.includes('Revenue') 
                 ? formatCurrency(entry.value) 
                 : entry.name.includes('Efficiency') ? `${entry.value} km/L` : entry.value}
@@ -222,7 +222,12 @@ export default function AnalyticsPage() {
                   axisLine={false} 
                   width={80}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip 
+                  content={<CustomTooltip />} 
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                  contentStyle={{ backgroundColor: 'transparent', border: 'none' }}
+                  wrapperStyle={{ outline: 'none' }}
+                />
                 <Bar 
                   dataKey="totalCost" 
                   name="Total Cost"

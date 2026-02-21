@@ -3,7 +3,7 @@
  * User authentication with FleetFlow branding
  */
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Truck, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
@@ -166,6 +166,19 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* Register Link */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-400">
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+              >
+                Create one now
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Demo Credentials */}
