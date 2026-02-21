@@ -1,15 +1,13 @@
 /**
  * Navbar Component
- * Top navigation bar with search and notifications
+ * Top navigation bar with user profile
  */
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Search, Menu } from 'lucide-react';
-import { useState } from 'react';
+import { Menu } from 'lucide-react';
 
 export default function Navbar({ onMenuClick, sidebarCollapsed }) {
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <header
@@ -20,7 +18,7 @@ export default function Navbar({ onMenuClick, sidebarCollapsed }) {
       )}
     >
       <div className="h-full flex items-center justify-between px-6">
-        {/* Left - Search */}
+        {/* Left - Mobile Menu Button */}
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
@@ -28,40 +26,10 @@ export default function Navbar({ onMenuClick, sidebarCollapsed }) {
           >
             <Menu className="w-5 h-5" />
           </button>
-
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn(
-                'w-64 pl-10 pr-4 py-2 rounded-xl',
-                'bg-white/5 border border-white/10',
-                'text-white placeholder-gray-500',
-                'focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50',
-                'transition-all duration-200'
-              )}
-            />
-          </div>
         </div>
 
-        {/* Right - Notifications & User */}
-        <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <button
-            className={cn(
-              'relative p-2 rounded-xl',
-              'text-gray-400 hover:text-white hover:bg-white/5',
-              'transition-all duration-200'
-            )}
-          >
-            <Bell className="w-5 h-5" />
-            {/* Notification badge */}
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-
+        {/* Right - User Profile */}
+        <div className="flex items-center gap-4 ml-auto">
           {/* User Avatar */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">

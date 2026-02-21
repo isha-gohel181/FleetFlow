@@ -14,7 +14,10 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-[#0F172A]">
       {/* Sidebar */}
-      <Sidebar collapsed={sidebarCollapsed} />
+      <Sidebar 
+        collapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
 
       {/* Navbar */}
       <Navbar 

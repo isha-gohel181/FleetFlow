@@ -270,7 +270,7 @@ export default function FuelLogsPage() {
                   value={formData.vehicle}
                   onChange={(e) => setFormData({ ...formData, vehicle: e.target.value })}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-emerald-500/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium hover:bg-white/15 hover:border-white/30 outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-200"
                 >
                   <option value="">Select vehicle</option>
                   {availableVehicles.map(v => (

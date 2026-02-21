@@ -147,9 +147,65 @@ const completeMaintenace = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Update maintenance log
+ * @route   PUT /api/maintenance/:id
+ * @access  Private (FleetManager, SafetyOfficer)
+ */
+const updateMaintenanceLog = asyncHandler(async (req, res) => {
+  const { description, cost, date } = req.body;
+
+  const log = await MaintenanceLog.findById(req.params.id);
+  if (!log) {
+    throw new ApiError(404, 'Maintenance log not found');
+  }
+
+  // Update fields
+  if (description) log.description = description;
+  if (cost) log.cost = cost;
+  if (date) log.date = date;
+
+  await log.save();
+  await log.populate('vehicle', 'name licensePlate vehicleType');
+
+  res.status(200).json({
+    success: true,
+    message: 'Maintenance log updated successfully',
+    data: { maintenanceLog: log }
+  });
+});
+
+/**
+ * @desc    Delete maintenance log
+ * @route   DELETE /api/maintenance/:id
+ * @access  Private (FleetManager, SafetyOfficer)
+ */
+const deleteMaintenanceLog = asyncHandler(async (req, res) => {
+  const log = await MaintenanceLog.findById(req.params.id);
+
+  if (!log) {
+    throw new ApiError(404, 'Maintenance log not found');
+  }
+
+  // Check if vehicle is still in shop - if so, set it back to available
+  const vehicle = await Vehicle.findById(log.vehicle);
+  if (vehicle && vehicle.status === VEHICLE_STATUS.IN_SHOP) {
+    await Vehicle.findByIdAndUpdate(log.vehicle, { status: VEHICLE_STATUS.AVAILABLE });
+  }
+
+  await MaintenanceLog.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: 'Maintenance log deleted successfully'
+  });
+});
+
 module.exports = {
   getAllMaintenanceLogs,
   getMaintenanceLogById,
   createMaintenanceLog,
+  updateMaintenanceLog,
+  deleteMaintenanceLog,
   completeMaintenace
 };

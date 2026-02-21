@@ -15,6 +15,8 @@ const {
   getAllMaintenanceLogs,
   getMaintenanceLogById,
   createMaintenanceLog,
+  updateMaintenanceLog,
+  deleteMaintenanceLog,
   completeMaintenace
 } = require('../controllers/maintenance.controller');
 
@@ -51,6 +53,22 @@ router.post(
   authorize(ROLES.FLEET_MANAGER, ROLES.SAFETY_OFFICER),
   createMaintenanceValidation,
   createMaintenanceLog
+);
+
+// PUT /api/maintenance/:id - FleetManager, SafetyOfficer
+router.put(
+  '/:id',
+  authorize(ROLES.FLEET_MANAGER, ROLES.SAFETY_OFFICER),
+  mongoIdParamValidation,
+  updateMaintenanceLog
+);
+
+// DELETE /api/maintenance/:id - FleetManager, SafetyOfficer
+router.delete(
+  '/:id',
+  authorize(ROLES.FLEET_MANAGER, ROLES.SAFETY_OFFICER),
+  mongoIdParamValidation,
+  deleteMaintenanceLog
 );
 
 // PATCH /api/maintenance/:id/complete - FleetManager, SafetyOfficer

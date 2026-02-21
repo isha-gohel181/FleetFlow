@@ -18,7 +18,6 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { useState } from 'react';
 
 // Navigation items with role-based access
 const navItems = [
@@ -66,10 +65,9 @@ const navItems = [
   }
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, onToggle }) {
   const { user, logout, hasRole } = useAuth();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
 
   // Filter navigation items based on user role
   const filteredNavItems = navItems.filter(item => hasRole(item.roles));
@@ -83,22 +81,17 @@ export default function Sidebar() {
       )}
     >
       {/* Logo Section */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#A78BFA] flex items-center justify-center">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-white">FleetFlow</span>
+      <div className="h-16 flex items-center justify-center px-4 border-b border-white/10">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#A78BFA] flex items-center justify-center flex-shrink-0">
+            <Truck className="w-5 h-5 text-white" />
           </div>
-        )}
-        {collapsed && (
-          <div className="w-full flex justify-center">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#A78BFA] flex items-center justify-center">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-          </div>
-        )}
+          {!collapsed && (
+            <span className="text-xl font-bold text-white whitespace-nowrap">
+              FleetFlow
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Navigation */}
@@ -155,7 +148,7 @@ export default function Sidebar() {
 
       {/* Collapse Toggle */}
       <button
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={onToggle}
         className={cn(
           'absolute -right-3 top-20 w-6 h-6 rounded-full',
           'bg-[#7C3AED] text-white flex items-center justify-center',

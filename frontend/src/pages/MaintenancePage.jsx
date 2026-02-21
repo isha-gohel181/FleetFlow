@@ -24,7 +24,9 @@ import {
   ChevronRight,
   AlertTriangle,
   FileText,
-  X
+  X,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 export default function MaintenancePage() {
@@ -38,6 +40,7 @@ export default function MaintenancePage() {
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingLog, setEditingLog] = useState(null);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
@@ -71,11 +74,35 @@ export default function MaintenancePage() {
   };
 
   const openAddModal = async () => {
+    setEditingLog(null);
     setIsModalOpen(true);
     setFormLoading(true);
     try {
       const response = await vehicleService.getAll({ 
         status: ['Available', 'InShop'], // Can add maintenance to available or already in shop
+        limit: 100 
+      });
+      setAvailableVehicles(response.data.vehicles);
+    } catch (err) {
+      setFormError('Failed to load vehicles');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const openEditModal = async (log) => {
+    setEditingLog(log);
+    setFormData({
+      vehicle: log.vehicle._id,
+      description: log.description,
+      cost: log.cost,
+      date: new Date(log.date).toISOString().split('T')[0]
+    });
+    setIsModalOpen(true);
+    setFormLoading(true);
+    try {
+      const response = await vehicleService.getAll({ 
+        status: ['Available', 'InShop'],
         limit: 100 
       });
       setAvailableVehicles(response.data.vehicles);
@@ -92,8 +119,13 @@ export default function MaintenancePage() {
     setFormError('');
 
     try {
-      await maintenanceService.create(formData);
+      if (editingLog) {
+        await maintenanceService.update(editingLog._id, formData);
+      } else {
+        await maintenanceService.create(formData);
+      }
       setIsModalOpen(false);
+      setEditingLog(null);
       fetchLogs();
       // Reset form
       setFormData({
@@ -103,9 +135,22 @@ export default function MaintenancePage() {
         date: new Date().toISOString().split('T')[0]
       });
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to create log');
+      setFormError(err.response?.data?.message || `Failed to ${editingLog ? 'update' : 'create'} log`);
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const handleDelete = async (log) => {
+    if (!confirm(`Are you sure you want to delete this maintenance log for ${log.vehicle.name}?`)) {
+      return;
+    }
+
+    try {
+      await maintenanceService.delete(log._id);
+      fetchLogs();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete maintenance log');
     }
   };
 
@@ -221,14 +266,28 @@ export default function MaintenancePage() {
                       </td>
                       {canManage && (
                         <td className="py-4 px-6">
-                          <div className="flex items-center justify-end">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openEditModal(log)}
+                              className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+                              title="Edit"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(log)}
+                              className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                             {log.vehicle?.status === 'InShop' && (
                               <button
                                 onClick={() => handleComplete(log._id)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white transition-all text-xs font-medium"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white transition-all text-xs font-medium ml-2"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                Ready for Road
+                                Ready
                               </button>
                             )}
                           </div>
@@ -281,8 +340,24 @@ export default function MaintenancePage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
           <div className="relative w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl shadow-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-white">Log Maintenance Activity</h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+              <h2 className="text-xl font-semibold text-white">
+                {editingLog ? 'Edit Maintenance Log' : 'Log Maintenance Activity'}
+              </h2>
+              <button 
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingLog(null);
+                  setFormData({
+                    vehicle: '',
+                    description: '',
+                    cost: '',
+                    date: new Date().toISOString().split('T')[0]
+                  });
+                }} 
+                className="p-2 text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -293,12 +368,18 @@ export default function MaintenancePage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Vehicle *</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Vehicle * {editingLog && <span className="text-xs text-gray-500">(cannot be changed)</span>}
+                </label>
                 <select
                   value={formData.vehicle}
                   onChange={(e) => setFormData({ ...formData, vehicle: e.target.value })}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-amber-500/50"
+                  disabled={editingLog}
+                  className={cn(
+                    "w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium outline-none focus:border-amber-500/50 focus:bg-white/15 transition-all duration-200",
+                    editingLog ? "opacity-60 cursor-not-allowed" : "hover:bg-white/15 hover:border-white/30"
+                  )}
                 >
                   <option value="">Select vehicle</option>
                   {availableVehicles.map(v => (
@@ -346,7 +427,16 @@ export default function MaintenancePage() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingLog(null);
+                    setFormData({
+                      vehicle: '',
+                      description: '',
+                      cost: '',
+                      date: new Date().toISOString().split('T')[0]
+                    });
+                  }}
                   className="flex-1 py-3 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10"
                 >
                   Cancel
@@ -356,7 +446,7 @@ export default function MaintenancePage() {
                   disabled={formLoading}
                   className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-medium hover:bg-amber-600 disabled:opacity-50"
                 >
-                  {formLoading ? 'Submitting...' : 'Submit Log'}
+                  {formLoading ? 'Submitting...' : (editingLog ? 'Update Log' : 'Submit Log')}
                 </button>
               </div>
             </form>

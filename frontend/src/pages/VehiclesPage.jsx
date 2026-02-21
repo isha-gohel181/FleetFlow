@@ -210,10 +210,12 @@ export default function VehiclesPage() {
               setPagination(p => ({ ...p, current: 1 }));
             }}
             className={cn(
-              'px-4 py-2 rounded-xl appearance-none',
-              'bg-white/5 border border-white/10',
-              'text-white text-sm cursor-pointer',
-              'focus:outline-none focus:border-purple-500/50'
+              'px-4 py-2.5 rounded-xl appearance-none',
+              'bg-white/10 border border-white/20',
+              'text-white text-sm font-medium cursor-pointer',
+              'hover:bg-white/15 hover:border-white/30',
+              'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
+              'transition-all duration-200 backdrop-blur-sm'
             )}
           >
             <option value="all">All Status</option>
@@ -231,10 +233,12 @@ export default function VehiclesPage() {
               setPagination(p => ({ ...p, current: 1 }));
             }}
             className={cn(
-              'px-4 py-2 rounded-xl appearance-none',
-              'bg-white/5 border border-white/10',
-              'text-white text-sm cursor-pointer',
-              'focus:outline-none focus:border-purple-500/50'
+              'px-4 py-2.5 rounded-xl appearance-none',
+              'bg-white/10 border border-white/20',
+              'text-white text-sm font-medium cursor-pointer',
+              'hover:bg-white/15 hover:border-white/30',
+              'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
+              'transition-all duration-200 backdrop-blur-sm'
             )}
           >
             <option value="all">All Types</option>
@@ -464,9 +468,11 @@ export default function VehiclesPage() {
                   onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
                   className={cn(
                     'w-full px-4 py-3 rounded-xl',
-                    'bg-white/5 border border-white/10',
-                    'text-white cursor-pointer',
-                    'focus:outline-none focus:border-purple-500/50'
+                    'bg-white/10 border border-white/20',
+                    'text-white font-medium cursor-pointer',
+                    'hover:bg-white/15 hover:border-white/30',
+                    'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
+                    'transition-all duration-200'
                   )}
                 >
                   <option value="Truck">Truck</option>

@@ -389,7 +389,7 @@ export default function TripsPage() {
                     value={formData.vehicle}
                     onChange={(e) => handleVehicleChange(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-purple-500/50 outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 focus:bg-white/15 outline-none transition-all duration-200"
                   >
                     <option value="">Select available vehicle</option>
                     {availableVehicles.map(v => (
@@ -405,7 +405,7 @@ export default function TripsPage() {
                     value={formData.driver}
                     onChange={(e) => setFormData({ ...formData, driver: e.target.value })}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-purple-500/50 outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 focus:bg-white/15 outline-none transition-all duration-200"
                   >
                     <option value="">Select available driver</option>
                     {availableDrivers.map(d => (

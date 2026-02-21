@@ -36,6 +36,27 @@ const maintenanceService = {
   },
 
   /**
+   * Update maintenance log
+   * @param {string} id - Maintenance log ID
+   * @param {Object} data - Updated data (description, cost, date)
+   * @returns {Promise} - Updated maintenance log
+   */
+  update: async (id, data) => {
+    const response = await api.put(`/maintenance/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete maintenance log
+   * @param {string} id - Maintenance log ID
+   * @returns {Promise} - Success message
+   */
+  delete: async (id) => {
+    const response = await api.delete(`/maintenance/${id}`);
+    return response.data;
+  },
+
+  /**
    * Complete maintenance
    * @param {string} id - Maintenance log ID
    * @returns {Promise} - Updated vehicle

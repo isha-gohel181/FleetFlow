@@ -95,11 +95,13 @@ export default function DashboardPage() {
               value={vehicleTypeFilter}
               onChange={(e) => setVehicleTypeFilter(e.target.value)}
               className={cn(
-                'appearance-none pl-4 pr-10 py-2 rounded-xl',
-                'bg-white/5 border border-white/10',
-                'text-white text-sm',
-                'focus:outline-none focus:border-purple-500/50',
-                'cursor-pointer'
+                'appearance-none pl-4 pr-10 py-2.5 rounded-xl',
+                'bg-white/10 border border-white/20',
+                'text-white text-sm font-medium',
+                'hover:bg-white/15 hover:border-white/30',
+                'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
+                'cursor-pointer transition-all duration-200',
+                'backdrop-blur-sm'
               )}
             >
               <option value="all">All Vehicles</option>
@@ -107,7 +109,7 @@ export default function DashboardPage() {
               <option value="Van">Van</option>
               <option value="Bike">Bike</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
           </div>
 
           {/* Status Filter */}
@@ -116,11 +118,13 @@ export default function DashboardPage() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className={cn(
-                'appearance-none pl-4 pr-10 py-2 rounded-xl',
-                'bg-white/5 border border-white/10',
-                'text-white text-sm',
-                'focus:outline-none focus:border-purple-500/50',
-                'cursor-pointer'
+                'appearance-none pl-4 pr-10 py-2.5 rounded-xl',
+                'bg-white/10 border border-white/20',
+                'text-white text-sm font-medium',
+                'hover:bg-white/15 hover:border-white/30',
+                'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
+                'cursor-pointer transition-all duration-200',
+                'backdrop-blur-sm'
               )}
             >
               <option value="all">All Status</option>
@@ -128,7 +132,7 @@ export default function DashboardPage() {
               <option value="OnTrip">On Trip</option>
               <option value="InShop">In Shop</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
           </div>
 
           {/* Date Filter (optional) */}
