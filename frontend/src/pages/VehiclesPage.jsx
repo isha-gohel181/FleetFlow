@@ -14,6 +14,13 @@ import {
   PageHeader 
 } from '@/components/common';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   Pencil,
   Trash2,
@@ -203,49 +210,43 @@ export default function VehiclesPage() {
           </div>
 
           {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+          <Select 
+            value={statusFilter} 
+            onValueChange={(value) => {
+              setStatusFilter(value);
               setPagination(p => ({ ...p, current: 1 }));
             }}
-            className={cn(
-              'px-4 py-2.5 rounded-xl appearance-none',
-              'bg-white/10 border border-white/20',
-              'text-white text-sm font-medium cursor-pointer',
-              'hover:bg-white/15 hover:border-white/30',
-              'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
-              'transition-all duration-200 backdrop-blur-sm'
-            )}
           >
-            <option value="all">All Status</option>
-            <option value="Available">Available</option>
-            <option value="OnTrip">On Trip</option>
-            <option value="InShop">In Shop</option>
-            <option value="Retired">Retired</option>
-          </select>
+            <SelectTrigger className="bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl backdrop-blur-sm">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-900 border-white/20 text-white">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Available">Available</SelectItem>
+              <SelectItem value="OnTrip">On Trip</SelectItem>
+              <SelectItem value="InShop">In Shop</SelectItem>
+              <SelectItem value="Retired">Retired</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* Type Filter */}
-          <select
-            value={typeFilter}
-            onChange={(e) => {
-              setTypeFilter(e.target.value);
+          <Select 
+            value={typeFilter} 
+            onValueChange={(value) => {
+              setTypeFilter(value);
               setPagination(p => ({ ...p, current: 1 }));
             }}
-            className={cn(
-              'px-4 py-2.5 rounded-xl appearance-none',
-              'bg-white/10 border border-white/20',
-              'text-white text-sm font-medium cursor-pointer',
-              'hover:bg-white/15 hover:border-white/30',
-              'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
-              'transition-all duration-200 backdrop-blur-sm'
-            )}
           >
-            <option value="all">All Types</option>
-            <option value="Truck">Truck</option>
-            <option value="Van">Van</option>
-            <option value="Bike">Bike</option>
-          </select>
+            <SelectTrigger className="bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl backdrop-blur-sm">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-900 border-white/20 text-white">
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="Truck">Truck</SelectItem>
+              <SelectItem value="Van">Van</SelectItem>
+              <SelectItem value="Bike">Bike</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </GlassCard>
 

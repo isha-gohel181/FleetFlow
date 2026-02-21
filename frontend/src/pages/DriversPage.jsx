@@ -14,15 +14,26 @@ import {
   PageHeader 
 } from '@/components/common';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   Pencil,
+  Trash2,
   X,
   User,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
   Search,
-  Calendar
+  Calendar,
+  Shield,
+  CheckCircle,
+  MessageSquare
 } from 'lucide-react';
 
 export default function DriversPage() {
@@ -48,13 +59,14 @@ export default function DriversPage() {
   const [formData, setFormData] = useState({
     name: '',
     licenseCategory: 'A',
+    licenseNumber: '',
     licenseExpiryDate: '',
     status: 'Available'
   });
 
   useEffect(() => {
     fetchDrivers();
-  }, [pagination.current, statusFilter]);
+  }, [pagination.current, statusFilter, searchQuery]);
 
   const fetchDrivers = async () => {
     try {
@@ -64,6 +76,7 @@ export default function DriversPage() {
         limit: 10
       };
       if (statusFilter !== 'all') params.status = statusFilter;
+      if (searchQuery) params.search = searchQuery;
       
       const response = await driverService.getAll(params);
       setDrivers(response.data.drivers);
@@ -81,6 +94,7 @@ export default function DriversPage() {
       setFormData({
         name: driver.name,
         licenseCategory: driver.licenseCategory,
+        licenseNumber: driver.licenseNumber || '',
         licenseExpiryDate: new Date(driver.licenseExpiryDate).toISOString().split('T')[0],
         status: driver.status
       });
@@ -89,6 +103,7 @@ export default function DriversPage() {
       setFormData({
         name: '',
         licenseCategory: 'A',
+        licenseNumber: '',
         licenseExpiryDate: '',
         status: 'Available'
       });
@@ -124,9 +139,21 @@ export default function DriversPage() {
     }
   };
 
-  const filteredDrivers = drivers.filter(driver => 
-    driver.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDelete = async (driver) => {
+    if (!window.confirm(`Are you sure you want to delete "${driver.name}"?`)) {
+      return;
+    }
+
+    try {
+      await driverService.delete(driver._id);
+      fetchDrivers();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete driver');
+    }
+  };
+
+  // No local filtering needed anymore, but let's keep consistency
+  const displayDrivers = drivers;
 
   if (loading && drivers.length === 0) {
     return <LoadingSpinner fullScreen text="Loading drivers..." />;
@@ -160,13 +187,16 @@ export default function DriversPage() {
       <GlassCard className="mb-6">
         <div className="flex flex-wrap items-center gap-4">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-[300px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by name..."
+              placeholder="Search by name or license number..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPagination(p => ({ ...p, current: 1 }));
+              }}
               className={cn(
                 'w-full pl-10 pr-4 py-2 rounded-xl',
                 'bg-white/5 border border-white/10',
@@ -177,26 +207,24 @@ export default function DriversPage() {
           </div>
 
           {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+          <Select 
+            value={statusFilter} 
+            onValueChange={(value) => {
+              setStatusFilter(value);
               setPagination(p => ({ ...p, current: 1 }));
             }}
-            className={cn(
-              'px-4 py-2.5 rounded-xl appearance-none',
-              'bg-white/10 border border-white/20',
-              'text-white text-sm font-medium cursor-pointer',
-              'hover:bg-white/15 hover:border-white/30',
-              'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
-              'transition-all duration-200 backdrop-blur-sm'
-            )}
           >
-            <option value="all">All Status</option>
-            <option value="Available">Available</option>
-            <option value="OnDuty">On Duty</option>
-            <option value="Suspended">Suspended</option>
-          </select>
+            <SelectTrigger className="bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl backdrop-blur-sm">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-900 border-white/20 text-white">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Available">Available</SelectItem>
+              <SelectItem value="OnDuty">On Duty</SelectItem>
+              <SelectItem value="Taking a Break">Taking a Break</SelectItem>
+              <SelectItem value="Suspended">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </GlassCard>
 
@@ -209,7 +237,7 @@ export default function DriversPage() {
               <p className="text-red-400">{error}</p>
             </div>
           </div>
-        ) : filteredDrivers.length === 0 ? (
+        ) : displayDrivers.length === 0 ? (
           <EmptyState
             icon={User}
             title="No drivers found"
@@ -232,8 +260,9 @@ export default function DriversPage() {
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left py-4 px-6 text-sm font-medium text-gray-400">Name</th>
-                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-400">License Category</th>
-                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-400">License Expiry</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-400">License Details</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-400">Perf (CR / SS)</th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-400">Complaints</th>
                     <th className="text-left py-4 px-6 text-sm font-medium text-gray-400">Status</th>
                     {canManage && (
                       <th className="text-right py-4 px-6 text-sm font-medium text-gray-400">Actions</th>
@@ -241,7 +270,7 @@ export default function DriversPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDrivers.map((driver) => {
+                  {displayDrivers.map((driver) => {
                     const expiryDate = new Date(driver.licenseExpiryDate);
                     const isExpired = expiryDate < new Date();
                     
@@ -258,22 +287,53 @@ export default function DriversPage() {
                             <span className="text-white font-medium">{driver.name}</span>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-gray-300">
-                          <span className="px-2 py-1 rounded bg-white/5 text-xs font-bold border border-white/10">
-                            Category {driver.licenseCategory}
-                          </span>
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded bg-white/5 text-[10px] font-bold border border-white/10 text-purple-300">
+                                {driver.licenseCategory}
+                              </span>
+                              <span className="text-sm text-gray-300">#{driver.licenseNumber || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="w-3 h-3 text-gray-500" />
+                              <span className={cn(
+                                "text-[11px]",
+                                isExpired ? "text-red-400 font-bold" : "text-gray-500"
+                              )}>
+                                Exp: {expiryDate.toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
                         </td>
                         <td className="py-4 px-6">
-                          <div className="flex flex-col">
+                          <div className="flex items-center gap-4">
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                                <CheckCircle className="w-3 h-3" />
+                                {driver.completionRate || 0}%
+                              </div>
+                              <span className="text-[10px] text-gray-500">Completion</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1 text-xs text-blue-400 font-medium">
+                                <Shield className="w-3 h-3" />
+                                {driver.safetyScore || 0}%
+                              </div>
+                              <span className="text-[10px] text-gray-500">Safety</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <div className="flex items-center gap-1.5 justify-start">
+                            <MessageSquare className={cn(
+                              "w-4 h-4",
+                              (driver.complaints || 0) > 0 ? "text-amber-400" : "text-gray-600"
+                            )} />
                             <span className={cn(
-                              "text-sm font-medium",
-                              isExpired ? "text-red-400" : "text-gray-300"
-                            )}>
-                              {expiryDate.toLocaleDateString()}
-                            </span>
-                            {isExpired && (
-                              <span className="text-[10px] text-red-500 font-bold uppercase">Expired</span>
-                            )}
+                              "text-sm",
+                              (driver.complaints || 0) > 0 ? "text-white font-medium" : "text-gray-500"
+                            )}>{driver.complaints || 0}</span>
                           </div>
                         </td>
                         <td className="py-4 px-6">
@@ -289,6 +349,22 @@ export default function DriversPage() {
                               >
                                 <Pencil className="w-4 h-4" />
                               </button>
+                              <button
+                                onClick={() => handleDelete(driver)}
+                                disabled={driver.status === 'OnDuty'}
+                                className={cn(
+                                  'p-2 rounded-lg transition-all',
+                                  driver.status === 'OnDuty'
+                                    ? 'text-gray-600 cursor-not-allowed'
+                                    : 'text-gray-400 hover:text-red-400 hover:bg-red-500/10'
+                                )}
+                                title={driver.status === 'OnDuty' 
+                                  ? 'Cannot delete while on duty' 
+                                  : 'Delete'
+                                }
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </td>
                         )}
@@ -302,7 +378,7 @@ export default function DriversPage() {
             {/* Pagination */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
               <p className="text-sm text-gray-400">
-                Showing {filteredDrivers.length} of {pagination.total} drivers
+                Showing {displayDrivers.length} of {pagination.total} drivers
               </p>
               <div className="flex items-center gap-2">
                 <button
@@ -385,50 +461,64 @@ export default function DriversPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    License Category *
+                    License Number *
                   </label>
-                  <select
-                    value={formData.licenseCategory}
-                    onChange={(e) => setFormData({ ...formData, licenseCategory: e.target.value })}
+                  <input
+                    type="text"
+                    value={formData.licenseNumber}
+                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                    placeholder="e.g., DL-123456789"
+                    required
                     className={cn(
                       'w-full px-4 py-3 rounded-xl',
-                      'bg-white/10 border border-white/20',
-                      'text-white font-medium cursor-pointer',
-                      'hover:bg-white/15 hover:border-white/30',
-                      'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
-                      'transition-all duration-200'
+                      'bg-white/5 border border-white/10',
+                      'text-white placeholder-gray-500',
+                      'focus:outline-none focus:border-purple-500/50'
                     )}
-                  >
-                    <option value="A">Category A</option>
-                    <option value="B">Category B</option>
-                    <option value="C">Category C</option>
-                    <option value="D">Category D</option>
-                  </select>
+                  />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      License Category *
+                    </label>
+                    <Select 
+                      value={formData.licenseCategory} 
+                      onValueChange={(value) => setFormData({ ...formData, licenseCategory: value })}
+                    >
+                      <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl h-12">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-white/20 text-white">
+                        <SelectItem value="A">Category A</SelectItem>
+                        <SelectItem value="B">Category B</SelectItem>
+                        <SelectItem value="C">Category C</SelectItem>
+                        <SelectItem value="D">Category D</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Status
                   </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className={cn(
-                      'w-full px-4 py-3 rounded-xl',
-                      'bg-white/10 border border-white/20',
-                      'text-white font-medium cursor-pointer',
-                      'hover:bg-white/15 hover:border-white/30',
-                      'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
-                      'transition-all duration-200'
-                    )}
+                  <Select 
+                    value={formData.status} 
+                    onValueChange={(value) => setFormData({ ...formData, status: value })}
                   >
-                    <option value="Available">Available</option>
-                    <option value="OnDuty">On Duty</option>
-                    <option value="Suspended">Suspended</option>
-                  </select>
+                    <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl h-12">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20 text-white">
+                      <SelectItem value="Available">Available</SelectItem>
+                      <SelectItem value="OnDuty">On Duty</SelectItem>
+                      <SelectItem value="Taking a Break">Taking a Break</SelectItem>
+                      <SelectItem value="Suspended">Suspended</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

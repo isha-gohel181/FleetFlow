@@ -67,6 +67,11 @@ const tripSchema = new mongoose.Schema({
       message: 'Invalid status. Must be one of: Draft, Dispatched, Completed, Cancelled'
     },
     default: TRIP_STATUS.DRAFT
+  },
+  revenue: {
+    type: Number,
+    default: 0,
+    min: [0, 'Revenue cannot be negative']
   }
 }, {
   timestamps: true

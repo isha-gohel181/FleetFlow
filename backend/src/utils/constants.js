@@ -30,7 +30,8 @@ const VEHICLE_TYPE = {
 const DRIVER_STATUS = {
   AVAILABLE: 'Available',
   ON_DUTY: 'OnDuty',
-  SUSPENDED: 'Suspended'
+  SUSPENDED: 'Suspended',
+  BREAK: 'Taking a Break'
 };
 
 // Trip status enum

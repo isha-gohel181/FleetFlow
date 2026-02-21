@@ -1,7 +1,3 @@
-/**
- * Analytics Page
- * Fleet-wide performance metrics and cost analysis
- */
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { analyticsService } from '@/services';
@@ -12,16 +8,32 @@ import {
   MetricCard
 } from '@/components/common';
 import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  Legend
+} from 'recharts';
+import {
   BarChart3,
   TrendingUp,
   TrendingDown,
   Droplets,
   Truck,
   Wrench,
-  DollarSign,
+  IndianRupee,
   PieChart,
   Activity,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Download
 } from 'lucide-react';
 
 export default function AnalyticsPage() {
@@ -50,6 +62,13 @@ export default function AnalyticsPage() {
     }
   };
 
+  const formatCurrency = (val) => {
+    if (val >= 100000) {
+      return `₹${(val / 100000).toFixed(1)}L`;
+    }
+    return `₹${val.toLocaleString('en-IN')}`;
+  };
+
   if (loading) {
     return <LoadingSpinner fullScreen text="Calculating fleet metrics..." />;
   }
@@ -72,162 +91,191 @@ export default function AnalyticsPage() {
 
   const { vehicles, costs, trips } = dashboardData;
 
+  // Custom Chart Components
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-900/90 backdrop-blur-md border border-white/10 p-3 rounded-lg shadow-xl">
+          <p className="text-gray-400 text-xs font-medium mb-1">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="text-sm font-bold" style={{ color: entry.color }}>
+              {entry.name}: {entry.name.includes('Cost') || entry.name.includes('Revenue') 
+                ? formatCurrency(entry.value) 
+                : entry.name.includes('Efficiency') ? `${entry.value} km/L` : entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       <PageHeader 
         title="Fleet Analytics" 
         description="Deep dive into your operational efficiency and cost structures"
+        action={
+          <div className="flex gap-3">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all text-sm font-medium">
+              <Download className="w-4 h-4" />
+              Reports
+            </button>
+          </div>
+        }
       />
 
-      {/* Top Level Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Op. Cost"
-          value={`$${costs.totalOperationalCost.toLocaleString()}`}
-          subtitle="Fuel + Maintenance"
-          icon={DollarSign}
-          variant="primary"
-        />
-        <MetricCard
-          title="Avg. Efficiency"
-          value={`${(trips.completed?.totalDistance / costs.fuel?.totalLiters || 0).toFixed(2)}`}
-          subtitle="km per Liter"
-          icon={Activity}
-          variant="glass"
-        />
-        <MetricCard
-          title="Fleet Size"
-          value={vehicles.total}
-          subtitle="Active Vehicles"
-          icon={Truck}
-          variant="glass"
-        />
-        <MetricCard
-          title="Cargo Delivered"
-          value={`${(trips.completed?.totalCargoWeight / 1000 || 0).toFixed(1)}t`}
-          subtitle="Tonnes total weight"
-          icon={TrendingUp}
-          variant="glass"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Cost Breakdown */}
-        <GlassCard>
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <PieChart className="w-5 h-5 text-purple-400" />
-              Cost Distribution
-            </h3>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Fuel Expenditure</span>
-                <span className="text-white font-medium">${costs.fuel.total.toLocaleString()}</span>
-              </div>
-              <div className="h-3 bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{ width: `${(costs.fuel.total / costs.totalOperationalCost) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Maintenance & Repairs</span>
-                <span className="text-white font-medium">${costs.maintenance.total.toLocaleString()}</span>
-              </div>
-              <div className="h-3 bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-amber-500 rounded-full"
-                  style={{ width: `${(costs.maintenance.total / costs.totalOperationalCost) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="pt-8 border-t border-white/5">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20">
-                <div>
-                  <p className="text-xs text-purple-300">Total Expenditure</p>
-                  <p className="text-2xl font-bold text-white">${costs.totalOperationalCost.toLocaleString()}</p>
-                </div>
-                <BarChart3 className="w-10 h-10 text-purple-400/50" />
-              </div>
-            </div>
+      {/* 1. Metric Cards Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <GlassCard className="border-emerald-500/20 bg-emerald-500/5">
+          <div className="flex flex-col items-center justify-center py-2">
+            <p className="text-emerald-400 font-medium mb-2">Total Fuel Cost</p>
+            <p className="text-3xl font-bold text-white">{formatCurrency(costs.fuel.total)}</p>
           </div>
         </GlassCard>
 
-        {/* Vehicle Performance Ranking */}
-        <GlassCard>
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-blue-400" />
-              Fuel Efficiency Leaderboard
-            </h3>
-          </div>
-
-          <div className="space-y-4">
-            {fuelReport.slice(0, 5).map((item, index) => (
-              <div 
-                key={item.vehicle.id}
-                className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
-              >
-                <div className="w-8 font-bold text-gray-500 text-center">#{index + 1}</div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-white">{item.vehicle.name}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">{item.vehicle.licensePlate}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-emerald-400">
-                    {item.fuelEfficiency ? `${item.fuelEfficiency} km/L` : 'N/A'}
-                  </p>
-                  <p className="text-[10px] text-gray-500">{item.totalDistance.toLocaleString()} km total</p>
-                </div>
-              </div>
-            ))}
-            {fuelReport.length === 0 && (
-              <p className="text-center text-gray-500 py-12">No performance data available yet.</p>
-            )}
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Fleet Utilization */}
-      <GlassCard>
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-emerald-400" />
-            Operational Capacity
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-6 rounded-2xl bg-white/5">
-            <p className="text-gray-400 text-sm mb-1">Fleet Utilization</p>
+        <GlassCard className="border-blue-500/20 bg-blue-500/5">
+          <div className="flex flex-col items-center justify-center py-2">
+            <p className="text-blue-400 font-medium mb-2">Fleet ROI</p>
             <p className="text-3xl font-bold text-white">
-              {vehicles.total > 0 ? Math.round(((vehicles.byStatus?.OnTrip || 0) / vehicles.total) * 100) : 0}%
+              {costs.roi > 0 ? '+' : ''}{costs.roi}%
             </p>
-            <p className="text-xs text-gray-500 mt-2">Active vehicles vs total</p>
           </div>
+        </GlassCard>
 
-          <div className="text-center p-6 rounded-2xl bg-white/5">
-            <p className="text-gray-400 text-sm mb-1">Maintenance Burden</p>
-            <p className="text-3xl font-bold text-amber-500">
-              {vehicles.total > 0 ? Math.round(((vehicles.byStatus?.InShop || 0) / vehicles.total) * 100) : 0}%
-            </p>
-            <p className="text-xs text-gray-500 mt-2">Percentage currently in shop</p>
+        <GlassCard className="border-purple-500/20 bg-purple-500/5">
+          <div className="flex flex-col items-center justify-center py-2">
+            <p className="text-purple-400 font-medium mb-2">Utilization Rate</p>
+            <p className="text-3xl font-bold text-white">{costs.utilizationRate}%</p>
           </div>
+        </GlassCard>
+      </div>
 
-          <div className="text-center p-6 rounded-2xl bg-white/5">
-            <p className="text-gray-400 text-sm mb-1">Trip Success Rate</p>
-            <p className="text-3xl font-bold text-blue-500">
-              {trips.total > 0 ? Math.round(((trips.byStatus?.Completed || 0) / (trips.total - (trips.byStatus?.Draft || 0))) * 100) : 0}%
-            </p>
-            <p className="text-xs text-gray-500 mt-2">Completed vs scheduled trips</p>
+      {/* 2. Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Fuel Efficiency Trend */}
+        <GlassCard>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white">Fuel Efficiency Trend (km/L)</h3>
           </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={costs.trends}>
+                <defs>
+                  <linearGradient id="colorEfficiency" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#7C3AED" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#94a3b8" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                />
+                <YAxis 
+                  stroke="#94a3b8" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="fuelEfficiency" 
+                  name="Efficiency"
+                  stroke="#7C3AED" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorEfficiency)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassCard>
+
+        {/* Top 5 Costliest Vehicles */}
+        <GlassCard>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white">Top 5 Costliest Vehicles</h3>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={costs.costByVehicle} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" horizontal={false} />
+                <XAxis 
+                  type="number" 
+                  stroke="#94a3b8" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tickFormatter={(val) => `₹${val/1000}k`}
+                />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  stroke="#94a3b8" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  width={80}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar 
+                  dataKey="totalCost" 
+                  name="Total Cost"
+                  fill="#F59E0B" 
+                  radius={[0, 4, 4, 0]} 
+                  barSize={20}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* 3. Financial Summary Table */}
+      <GlassCard title="Financial Summary of Month" padding={false}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="py-4 px-6 text-sm font-medium text-purple-400">Month</th>
+                <th className="py-4 px-6 text-sm font-medium text-purple-400">Revenue</th>
+                <th className="py-4 px-6 text-sm font-medium text-purple-400">Fuel Cost</th>
+                <th className="py-4 px-6 text-sm font-medium text-purple-400">Maintenance</th>
+                <th className="py-4 px-6 text-sm font-medium text-purple-400">Net Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {costs.trends.map((row, idx) => (
+                <tr 
+                  key={idx}
+                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                >
+                  <td className="py-4 px-6 text-white font-medium">{row.month}</td>
+                  <td className="py-4 px-6 text-emerald-400 font-medium">{formatCurrency(row.revenue)}</td>
+                  <td className="py-4 px-6 text-red-400">{formatCurrency(row.fuelCost)}</td>
+                  <td className="py-4 px-6 text-amber-400">{formatCurrency(row.maintenanceCost)}</td>
+                  <td className="py-4 px-6">
+                    <span className={cn(
+                      "font-bold",
+                      row.netProfit >= 0 ? "text-emerald-500" : "text-red-500"
+                    )}>
+                      {formatCurrency(row.netProfit)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {costs.trends.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="py-12 text-center text-gray-500">No financial data available for the period.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </GlassCard>
     </div>

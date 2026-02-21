@@ -3,23 +3,37 @@
  * Main overview with KPIs, filters, and recent activities
  */
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { analyticsService, tripService } from '@/services';
+import { useAuth } from '@/contexts/AuthContext';
 import { MetricCard, GlassCard, LoadingSpinner, StatusBadge, PageHeader } from '@/components/common';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Truck,
   AlertTriangle,
   Activity,
   Package,
   Filter,
-  Calendar,
-  ChevronDown,
   MapPin,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Plus
 } from 'lucide-react';
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+  const { hasRole } = useAuth();
+  
+  const canManage = hasRole('FleetManager');
+  const canDispatch = hasRole('FleetManager') || hasRole('Dispatcher');
+
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [recentTrips, setRecentTrips] = useState([]);
@@ -31,14 +45,18 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [vehicleTypeFilter, statusFilter]);
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
+      if (!dashboardData) setLoading(true);
+      const params = {};
+      if (vehicleTypeFilter !== 'all') params.vehicleType = vehicleTypeFilter;
+      if (statusFilter !== 'all') params.status = statusFilter;
+
       const [dashboardRes, tripsRes] = await Promise.all([
-        analyticsService.getDashboard(),
-        tripService.getAll({ limit: 5 })
+        analyticsService.getDashboard(params),
+        tripService.getAll({ ...params, limit: 5 })
       ]);
       setDashboardData(dashboardRes.data);
       setRecentTrips(tripsRes.data.trips);
@@ -79,6 +97,40 @@ export default function DashboardPage() {
       <PageHeader 
         title="Command Center" 
         description="Fleet overview and real-time statistics"
+        action={
+          <div className="flex items-center gap-3">
+            {canDispatch && (
+              <button
+                onClick={() => navigate('/trips')}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2.5 rounded-xl',
+                  'bg-gradient-to-r from-[#7C3AED] to-[#6D28D9]',
+                  'text-white font-medium shadow-lg shadow-purple-500/25',
+                  'hover:from-[#6D28D9] hover:to-[#5B21B6]',
+                  'transition-all duration-200'
+                )}
+              >
+                <Plus className="w-5 h-5" />
+                New Trip
+              </button>
+            )}
+            {canManage && (
+              <button
+                onClick={() => navigate('/vehicles')}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2.5 rounded-xl',
+                  'bg-gradient-to-r from-[#7C3AED] to-[#6D28D9]',
+                  'text-white font-medium shadow-lg shadow-purple-500/25',
+                  'hover:from-[#6D28D9] hover:to-[#5B21B6]',
+                  'transition-all duration-200'
+                )}
+              >
+                <Plus className="w-5 h-5" />
+                New Vehicle
+              </button>
+            )}
+          </div>
+        }
       />
 
       {/* Filters Section */}
@@ -90,65 +142,31 @@ export default function DashboardPage() {
           </div>
 
           {/* Vehicle Type Filter */}
-          <div className="relative">
-            <select
-              value={vehicleTypeFilter}
-              onChange={(e) => setVehicleTypeFilter(e.target.value)}
-              className={cn(
-                'appearance-none pl-4 pr-10 py-2.5 rounded-xl',
-                'bg-white/10 border border-white/20',
-                'text-white text-sm font-medium',
-                'hover:bg-white/15 hover:border-white/30',
-                'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
-                'cursor-pointer transition-all duration-200',
-                'backdrop-blur-sm'
-              )}
-            >
-              <option value="all">All Vehicles</option>
-              <option value="Truck">Truck</option>
-              <option value="Van">Van</option>
-              <option value="Bike">Bike</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
-          </div>
+          <Select value={vehicleTypeFilter} onValueChange={setVehicleTypeFilter}>
+            <SelectTrigger className="bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl backdrop-blur-sm">
+              <SelectValue placeholder="All Vehicles" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-900 border-white/20 text-white">
+              <SelectItem value="all">All Vehicles</SelectItem>
+              <SelectItem value="Truck">Truck</SelectItem>
+              <SelectItem value="Van">Van</SelectItem>
+              <SelectItem value="Bike">Bike</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* Status Filter */}
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className={cn(
-                'appearance-none pl-4 pr-10 py-2.5 rounded-xl',
-                'bg-white/10 border border-white/20',
-                'text-white text-sm font-medium',
-                'hover:bg-white/15 hover:border-white/30',
-                'focus:outline-none focus:border-purple-500/50 focus:bg-white/15',
-                'cursor-pointer transition-all duration-200',
-                'backdrop-blur-sm'
-              )}
-            >
-              <option value="all">All Status</option>
-              <option value="Available">Available</option>
-              <option value="OnTrip">On Trip</option>
-              <option value="InShop">In Shop</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
-          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl backdrop-blur-sm">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-900 border-white/20 text-white">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Available">Available</SelectItem>
+              <SelectItem value="OnTrip">On Trip</SelectItem>
+              <SelectItem value="InShop">In Shop</SelectItem>
+            </SelectContent>
+          </Select>
 
-          {/* Date Filter (optional) */}
-          <button
-            className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-xl',
-              'bg-white/5 border border-white/10',
-              'text-gray-400 text-sm',
-              'hover:bg-white/10 hover:text-white',
-              'transition-all duration-200'
-            )}
-          >
-            <Calendar className="w-4 h-4" />
-            Last 7 days
-            <ChevronDown className="w-4 h-4" />
-          </button>
         </div>
       </GlassCard>
 
@@ -304,20 +322,20 @@ export default function DashboardPage() {
                 <div className="p-3 rounded-xl bg-white/5">
                   <p className="text-xs text-gray-400 mb-1">Fuel Costs</p>
                   <p className="text-lg font-semibold text-white">
-                    ${costs.fuel?.total?.toLocaleString() || 0}
+                    ₹{costs.fuel?.total?.toLocaleString('en-IN') || 0}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-white/5">
                   <p className="text-xs text-gray-400 mb-1">Maintenance</p>
                   <p className="text-lg font-semibold text-white">
-                    ${costs.maintenance?.total?.toLocaleString() || 0}
+                    ₹{costs.maintenance?.total?.toLocaleString('en-IN') || 0}
                   </p>
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
                 <p className="text-xs text-purple-300 mb-1">Total Operational Cost</p>
                 <p className="text-xl font-bold text-purple-400">
-                  ${costs.totalOperationalCost?.toLocaleString() || 0}
+                  ₹{costs.totalOperationalCost?.toLocaleString('en-IN') || 0}
                 </p>
               </div>
             </div>

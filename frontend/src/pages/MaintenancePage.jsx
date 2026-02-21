@@ -14,12 +14,19 @@ import {
   PageHeader 
 } from '@/components/common';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   Wrench,
   CheckCircle2,
   Calendar,
   Truck,
-  DollarSign,
+  IndianRupee,
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
@@ -260,8 +267,8 @@ export default function MaintenancePage() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-1 text-emerald-400 font-medium">
-                          <DollarSign className="w-3.5 h-3.5" />
-                          <span>{log.cost.toLocaleString()}</span>
+                          <IndianRupee className="w-3.5 h-3.5" />
+                          <span>{log.cost.toLocaleString('en-IN')}</span>
                         </div>
                       </td>
                       {canManage && (
@@ -371,21 +378,23 @@ export default function MaintenancePage() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Vehicle * {editingLog && <span className="text-xs text-gray-500">(cannot be changed)</span>}
                 </label>
-                <select
-                  value={formData.vehicle}
-                  onChange={(e) => setFormData({ ...formData, vehicle: e.target.value })}
-                  required
+                <Select 
+                  value={formData.vehicle} 
+                  onValueChange={(value) => setFormData({ ...formData, vehicle: value })}
                   disabled={editingLog}
-                  className={cn(
-                    "w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium outline-none focus:border-amber-500/50 focus:bg-white/15 transition-all duration-200",
-                    editingLog ? "opacity-60 cursor-not-allowed" : "hover:bg-white/15 hover:border-white/30"
-                  )}
                 >
-                  <option value="">Select vehicle</option>
-                  {availableVehicles.map(v => (
-                    <option key={v._id} value={v._id}>{v.name} ({v.licensePlate})</option>
-                  ))}
-                </select>
+                  <SelectTrigger className={cn(
+                    "w-full bg-white/10 border-white/20 text-white focus:border-amber-500/50 rounded-xl h-12",
+                    editingLog ? "opacity-60 cursor-not-allowed" : "hover:bg-white/15 hover:border-white/30"
+                  )}>
+                    <SelectValue placeholder="Select vehicle" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-white/20 text-white">
+                    {availableVehicles.map(v => (
+                      <SelectItem key={v._id} value={v._id}>{v.name} ({v.licensePlate})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -402,7 +411,7 @@ export default function MaintenancePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Cost ($) *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Cost (₹) *</label>
                   <input
                     type="number"
                     value={formData.cost}

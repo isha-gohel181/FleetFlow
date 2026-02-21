@@ -18,7 +18,15 @@ const getAllDrivers = asyncHandler(async (req, res) => {
   
   // Build filter query
   const filter = {};
-  if (status) filter.status = status;
+  if (status && status !== 'all') filter.status = status;
+  
+  // Search functionality
+  if (req.query.search) {
+    filter.$or = [
+      { name: { $regex: req.query.search, $options: 'i' } },
+      { licenseNumber: { $regex: req.query.search, $options: 'i' } }
+    ];
+  }
 
   // Pagination
   const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -68,11 +76,12 @@ const getDriverById = asyncHandler(async (req, res) => {
  * @access  Private (FleetManager only)
  */
 const createDriver = asyncHandler(async (req, res) => {
-  const { name, licenseCategory, licenseExpiryDate, status } = req.body;
+  const { name, licenseCategory, licenseNumber, licenseExpiryDate, status } = req.body;
 
   const driver = await Driver.create({
     name,
     licenseCategory: licenseCategory.toUpperCase(),
+    licenseNumber,
     licenseExpiryDate,
     status: status || 'Available'
   });
@@ -152,10 +161,40 @@ const getExpiringLicenses = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Delete driver
+ * @route   DELETE /api/drivers/:id
+ * @access  Private (FleetManager only)
+ * @note    Only drivers with "Available" or "Suspended" status can be deleted
+ */
+const deleteDriver = asyncHandler(async (req, res) => {
+  const driver = await Driver.findById(req.params.id);
+
+  if (!driver) {
+    throw new ApiError(404, 'Driver not found');
+  }
+
+  // Prevent deletion of drivers that are currently on duty
+  if (driver.status === 'OnDuty') {
+    throw new ApiError(
+      400,
+      `Cannot delete driver with status '${driver.status}'. Driver must be 'Available' or 'Suspended'.`
+    );
+  }
+
+  await Driver.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: 'Driver deleted successfully'
+  });
+});
+
 module.exports = {
   getAllDrivers,
   getDriverById,
   createDriver,
   updateDriver,
-  getExpiringLicenses
+  getExpiringLicenses,
+  deleteDriver
 };

@@ -7,10 +7,11 @@ import api from './api';
 const analyticsService = {
   /**
    * Get dashboard analytics
+   * @param {Object} params - Query parameters (vehicleType, status, days)
    * @returns {Promise} - Dashboard overview data
    */
-  getDashboard: async () => {
-    const response = await api.get('/analytics/dashboard');
+  getDashboard: async (params = {}) => {
+    const response = await api.get('/analytics/dashboard', { params });
     return response.data;
   },
 

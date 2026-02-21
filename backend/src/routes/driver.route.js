@@ -17,7 +17,8 @@ const {
   getDriverById,
   createDriver,
   updateDriver,
-  getExpiringLicenses
+  getExpiringLicenses,
+  deleteDriver
 } = require('../controllers/driver.controller');
 
 const { protect } = require('../middleware/auth.middleware');
@@ -69,6 +70,14 @@ router.put(
   authorize(ROLES.FLEET_MANAGER, ROLES.SAFETY_OFFICER),
   updateDriverValidation,
   updateDriver
+);
+
+// DELETE /api/drivers/:id - FleetManager only
+router.delete(
+  '/:id',
+  authorize(ROLES.FLEET_MANAGER),
+  mongoIdParamValidation,
+  deleteDriver
 );
 
 module.exports = router;

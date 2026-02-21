@@ -20,15 +20,38 @@ const driverSchema = new mongoose.Schema({
     trim: true,
     uppercase: true
   },
+  licenseNumber: {
+    type: String,
+    required: [true, 'License number is required'],
+    trim: true,
+    unique: true
+  },
   licenseExpiryDate: {
     type: Date,
     required: [true, 'License expiry date is required']
+  },
+  completionRate: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  safetyScore: {
+    type: Number,
+    default: 100,
+    min: 0,
+    max: 100
+  },
+  complaints: {
+    type: Number,
+    default: 0,
+    min: 0
   },
   status: {
     type: String,
     enum: {
       values: Object.values(DRIVER_STATUS),
-      message: 'Invalid status. Must be one of: Available, OnDuty, Suspended'
+      message: `Invalid status. Must be one of: ${Object.values(DRIVER_STATUS).join(', ')}`
     },
     default: DRIVER_STATUS.AVAILABLE
   }

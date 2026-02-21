@@ -13,10 +13,17 @@ import {
   PageHeader 
 } from '@/components/common';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   Fuel,
   Droplets,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Truck,
   ChevronLeft,
@@ -193,12 +200,12 @@ export default function FuelLogsPage() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-1 text-emerald-400 font-bold">
-                          <DollarSign className="w-3.5 h-3.5" />
-                          <span>{log.cost.toLocaleString()}</span>
+                          <IndianRupee className="w-3.5 h-3.5" />
+                          <span>{log.cost.toLocaleString('en-IN')}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-gray-400 text-sm">
-                        ${(log.cost / log.liters).toFixed(2)} / L
+                        ₹{(log.cost / log.liters).toFixed(2)} / L
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2 text-gray-400">
@@ -266,17 +273,19 @@ export default function FuelLogsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Vehicle *</label>
-                <select
-                  value={formData.vehicle}
-                  onChange={(e) => setFormData({ ...formData, vehicle: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium hover:bg-white/15 hover:border-white/30 outline-none focus:border-emerald-500/50 focus:bg-white/15 transition-all duration-200"
+                <Select 
+                  value={formData.vehicle} 
+                  onValueChange={(value) => setFormData({ ...formData, vehicle: value })}
                 >
-                  <option value="">Select vehicle</option>
-                  {availableVehicles.map(v => (
-                    <option key={v._id} value={v._id}>{v.name} ({v.licensePlate})</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-emerald-500/50 rounded-xl h-12">
+                    <SelectValue placeholder="Select vehicle" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-white/20 text-white">
+                    {availableVehicles.map(v => (
+                      <SelectItem key={v._id} value={v._id}>{v.name} ({v.licensePlate})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -293,7 +302,7 @@ export default function FuelLogsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Total Cost ($) *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Total Cost (₹) *</label>
                   <input
                     type="number"
                     step="0.01"

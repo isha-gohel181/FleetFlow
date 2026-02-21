@@ -14,6 +14,13 @@ import {
   PageHeader 
 } from '@/components/common';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   Play,
   CheckCircle2,
@@ -385,33 +392,37 @@ export default function TripsPage() {
                 {/* Vehicle Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Vehicle *</label>
-                  <select
-                    value={formData.vehicle}
-                    onChange={(e) => handleVehicleChange(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 focus:bg-white/15 outline-none transition-all duration-200"
+                  <Select 
+                    value={formData.vehicle} 
+                    onValueChange={(value) => handleVehicleChange(value)}
                   >
-                    <option value="">Select available vehicle</option>
-                    {availableVehicles.map(v => (
-                      <option key={v._id} value={v._id}>{v.name} ({v.licensePlate} - Max {v.maxCapacity}kg)</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl h-12">
+                      <SelectValue placeholder="Select available vehicle" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20 text-white">
+                      {availableVehicles.map(v => (
+                        <SelectItem key={v._id} value={v._id}>{v.name} ({v.licensePlate} - Max {v.maxCapacity}kg)</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Driver Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Driver *</label>
-                  <select
-                    value={formData.driver}
-                    onChange={(e) => setFormData({ ...formData, driver: e.target.value })}
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-medium hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 focus:bg-white/15 outline-none transition-all duration-200"
+                  <Select 
+                    value={formData.driver} 
+                    onValueChange={(value) => setFormData({ ...formData, driver: value })}
                   >
-                    <option value="">Select available driver</option>
-                    {availableDrivers.map(d => (
-                      <option key={d._id} value={d._id}>{d.name} (Cat {d.licenseCategory})</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full bg-white/10 border-white/20 text-white hover:bg-white/15 hover:border-white/30 focus:border-purple-500/50 rounded-xl h-12">
+                      <SelectValue placeholder="Select available driver" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20 text-white">
+                      {availableDrivers.map(d => (
+                        <SelectItem key={d._id} value={d._id}>{d.name} (Cat {d.licenseCategory})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Locations */}

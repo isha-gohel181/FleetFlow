@@ -28,8 +28,23 @@ const { VEHICLE_STATUS, DRIVER_STATUS, TRIP_STATUS } = require('../utils/constan
  * - Recent activities
  */
 const getDashboardAnalytics = asyncHandler(async (req, res) => {
+  const { vehicleType, status } = req.query;
+
+  // Build vehicle filter
+  const vehicleFilter = {};
+  if (vehicleType && vehicleType !== 'all') vehicleFilter.vehicleType = vehicleType;
+  if (status && status !== 'all') vehicleFilter.status = status;
+
+  // Get filtered vehicle IDs for other queries if filtering is active
+  let vehicleIds = null;
+  if (Object.keys(vehicleFilter).length > 0) {
+    const filteredVehicles = await Vehicle.find(vehicleFilter).select('_id');
+    vehicleIds = filteredVehicles.map(v => v._id);
+  }
+
   // Vehicle statistics
   const vehicleStats = await Vehicle.aggregate([
+    { $match: vehicleFilter },
     {
       $group: {
         _id: '$status',
@@ -39,6 +54,7 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
   ]);
 
   const vehiclesByType = await Vehicle.aggregate([
+    { $match: vehicleFilter },
     {
       $group: {
         _id: '$vehicleType',
@@ -47,7 +63,7 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
     }
   ]);
 
-  // Driver statistics
+  // Driver statistics - Not directly filtered by vehicle unless specifically tied
   const driverStats = await Driver.aggregate([
     {
       $group: {
@@ -69,7 +85,11 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
   });
 
   // Trip statistics
+  const tripFilter = {};
+  if (vehicleIds) tripFilter.vehicle = { $in: vehicleIds };
+
   const tripStats = await Trip.aggregate([
+    { $match: tripFilter },
     {
       $group: {
         _id: '$status',
@@ -81,7 +101,10 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
   // Calculate total distance from completed trips
   const completedTripsStats = await Trip.aggregate([
     {
-      $match: { status: TRIP_STATUS.COMPLETED }
+      $match: { 
+        ...tripFilter,
+        status: TRIP_STATUS.COMPLETED 
+      }
     },
     {
       $group: {
@@ -96,7 +119,11 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
   ]);
 
   // Cost statistics
+  const maintenanceFilter = {};
+  if (vehicleIds) maintenanceFilter.vehicle = { $in: vehicleIds };
+
   const maintenanceCosts = await MaintenanceLog.aggregate([
+    { $match: maintenanceFilter },
     {
       $group: {
         _id: null,
@@ -106,7 +133,11 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
     }
   ]);
 
+  const fuelFilter = {};
+  if (vehicleIds) fuelFilter.vehicle = { $in: vehicleIds };
+
   const fuelCosts = await FuelLog.aggregate([
+    { $match: fuelFilter },
     {
       $group: {
         _id: null,
@@ -136,11 +167,121 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
   }, {});
 
   // Recent trips
-  const recentTrips = await Trip.find()
+  const recentTrips = await Trip.find(tripFilter)
     .populate('vehicle', 'name licensePlate')
     .populate('driver', 'name')
     .sort({ createdAt: -1 })
     .limit(5);
+
+  // --- Detailed Fleet Analytics ---
+  
+  // 1. Monthly Trends (last 6 months)
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const monthlyFinancials = await Trip.aggregate([
+    { 
+      $match: { 
+        ...tripFilter,
+        createdAt: { $gte: sixMonthsAgo },
+        status: TRIP_STATUS.COMPLETED 
+      } 
+    },
+    {
+      $group: {
+        _id: { $month: "$createdAt" },
+        revenue: { $sum: "$revenue" },
+        trips: { $sum: 1 },
+        distance: { $sum: { $subtract: ["$endOdometer", "$startOdometer"] } }
+      }
+    },
+    { $sort: { "_id": 1 } }
+  ]);
+
+  const monthlyFuel = await FuelLog.aggregate([
+    { 
+      $match: { 
+        ...fuelFilter,
+        createdAt: { $gte: sixMonthsAgo } 
+      } 
+    },
+    {
+      $group: {
+        _id: { $month: "$createdAt" },
+        cost: { $sum: "$cost" },
+        liters: { $sum: "$liters" }
+      }
+    }
+  ]);
+
+  const monthlyMaintenance = await MaintenanceLog.aggregate([
+    { 
+      $match: { 
+        ...maintenanceFilter,
+        createdAt: { $gte: sixMonthsAgo } 
+      } 
+    },
+    {
+      $group: {
+        _id: { $month: "$createdAt" },
+        cost: { $sum: "$cost" }
+      }
+    }
+  ]);
+
+  // Combine monthly data
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const trends = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const m = d.getMonth() + 1;
+    const f = monthlyFuel.find(x => x._id === m) || { cost: 0, liters: 0 };
+    const ma = monthlyMaintenance.find(x => x._id === m) || { cost: 0 };
+    const t = monthlyFinancials.find(x => x._id === m) || { revenue: 0, distance: 0 };
+    
+    return {
+      month: monthNames[m - 1],
+      revenue: t.revenue,
+      fuelCost: f.cost,
+      maintenanceCost: ma.cost,
+      netProfit: t.revenue - (f.cost + ma.cost),
+      fuelEfficiency: f.liters > 0 ? parseFloat((t.distance / f.liters).toFixed(2)) : 0
+    };
+  }).reverse();
+
+  // 2. Top 5 Costliest Vehicles
+  const vehicleFuelCosts = await FuelLog.aggregate([
+    { $match: fuelFilter },
+    { $group: { _id: "$vehicle", fuelCost: { $sum: "$cost" } } }
+  ]);
+
+  const vehicleMaintenanceCosts = await MaintenanceLog.aggregate([
+    { $match: maintenanceFilter },
+    { $group: { _id: "$vehicle", maintenanceCost: { $sum: "$cost" } } }
+  ]);
+
+  // Combine and get top 5
+  let costByVehicle = await Vehicle.find(vehicleFilter).select('name licensePlate');
+  costByVehicle = costByVehicle.map(v => {
+    const f = vehicleFuelCosts.find(x => x._id.toString() === v._id.toString())?.fuelCost || 0;
+    const m = vehicleMaintenanceCosts.find(x => x._id.toString() === v._id.toString())?.maintenanceCost || 0;
+    return {
+      name: v.name,
+      licensePlate: v.licensePlate,
+      totalCost: f + m
+    };
+  }).sort((a, b) => b.totalCost - a.totalCost).slice(0, 5);
+
+  // ROI calculation
+  const totalRevenue = monthlyFinancials.reduce((acc, curr) => acc + curr.revenue, 0);
+  const totalCost = (fuelCosts[0]?.totalCost || 0) + (maintenanceCosts[0]?.totalCost || 0);
+  const roi = totalCost > 0 ? parseFloat((((totalRevenue - totalCost) / totalCost) * 100).toFixed(1)) : 0;
+
+  // Utilization Rate (Current)
+  const totalVehicles = Object.values(vehicleStatusCounts).reduce((a, b) => a + b, 0);
+  const utilizationRate = totalVehicles > 0 
+    ? Math.round(((vehicleStatusCounts[VEHICLE_STATUS.ON_TRIP] || 0) / totalVehicles) * 100) 
+    : 0;
 
   res.status(200).json({
     success: true,
@@ -151,7 +292,7 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
           acc[v._id] = v.count;
           return acc;
         }, {}),
-        total: Object.values(vehicleStatusCounts).reduce((a, b) => a + b, 0)
+        total: totalVehicles
       },
       drivers: {
         byStatus: driverStatusCounts,
@@ -161,7 +302,8 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
       trips: {
         byStatus: tripStatusCounts,
         total: Object.values(tripStatusCounts).reduce((a, b) => a + b, 0),
-        completed: completedTripsStats[0] || { totalTrips: 0, totalDistance: 0, totalCargoWeight: 0 }
+        completed: completedTripsStats[0] || { totalTrips: 0, totalDistance: 0, totalCargoWeight: 0 },
+        totalRevenue
       },
       costs: {
         maintenance: {
@@ -173,8 +315,11 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
           totalLiters: fuelCosts[0]?.totalLiters || 0,
           count: fuelCosts[0]?.count || 0
         },
-        totalOperationalCost: 
-          (maintenanceCosts[0]?.totalCost || 0) + (fuelCosts[0]?.totalCost || 0)
+        totalOperationalCost: totalCost,
+        roi,
+        utilizationRate,
+        trends,
+        costByVehicle
       },
       recentTrips
     }

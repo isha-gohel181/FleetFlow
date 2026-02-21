@@ -26,6 +26,7 @@ const statusConfig = {
   // Driver statuses
   OnDuty: { bg: 'bg-blue-500', text: 'text-white', label: 'On Duty' },
   Suspended: { bg: 'bg-red-500', text: 'text-white', label: 'Suspended' },
+  'Taking a Break': { bg: 'bg-amber-500', text: 'text-white', label: 'Taking a Break' },
   
   // Trip statuses
   Draft: { bg: 'bg-gray-500', text: 'text-white', label: 'Draft' },

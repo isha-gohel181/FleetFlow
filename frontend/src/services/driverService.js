@@ -54,6 +54,15 @@ const driverService = {
   getExpiringLicenses: async (days = 30) => {
     const response = await api.get('/drivers/expiring', { params: { days } });
     return response.data;
+  },
+  /**
+   * Delete driver
+   * @param {string} id - Driver ID
+   * @returns {Promise} - Success message
+   */
+  delete: async (id) => {
+    const response = await api.delete(`/drivers/${id}`);
+    return response.data;
   }
 };
 

@@ -32,13 +32,20 @@ const { VEHICLE_STATUS, DRIVER_STATUS, TRIP_STATUS } = require('../utils/constan
  * @query   status, vehicle, driver, page, limit
  */
 const getAllTrips = asyncHandler(async (req, res) => {
-  const { status, vehicle, driver, page = 1, limit = 10 } = req.query;
+  const { status, vehicle, driver, vehicleType, page = 1, limit = 10 } = req.query;
   
   // Build filter query
   const filter = {};
   if (status) filter.status = status;
   if (vehicle) filter.vehicle = vehicle;
   if (driver) filter.driver = driver;
+
+  // Add support for filtering by vehicle type
+  if (vehicleType && vehicleType !== 'all') {
+    const vehiclesOfType = await Vehicle.find({ vehicleType }).select('_id');
+    const vehicleIds = vehiclesOfType.map(v => v._id);
+    filter.vehicle = { $in: vehicleIds };
+  }
 
   // Pagination
   const skip = (parseInt(page) - 1) * parseInt(limit);
