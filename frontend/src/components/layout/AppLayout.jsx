@@ -4,10 +4,11 @@
  */
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
-export default function AppLayout({ children }) {
+export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
@@ -29,7 +30,7 @@ export default function AppLayout({ children }) {
         )}
       >
         <div className="p-6">
-          {children}
+          <Outlet />
         </div>
       </main>
     </div>
