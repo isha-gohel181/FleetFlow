@@ -5,7 +5,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppLayout, ProtectedRoute } from '@/components/layout';
-import { LoginPage, DashboardPage, VehiclesPage } from '@/pages';
+import { 
+  LoginPage, 
+  DashboardPage, 
+  VehiclesPage, 
+  DriversPage, 
+  TripsPage, 
+  MaintenancePage, 
+  FuelLogsPage, 
+  AnalyticsPage 
+} from '@/pages';
 
 function App() {
   return (
@@ -20,11 +29,11 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/vehicles" element={<VehiclesPage />} />
             {/* Placeholder routes for future pages */}
-            <Route path="/drivers" element={<PlaceholderPage title="Drivers Registry" />} />
-            <Route path="/trips" element={<PlaceholderPage title="Trip Management" />} />
-            <Route path="/maintenance" element={<PlaceholderPage title="Maintenance Logs" />} />
-            <Route path="/fuel" element={<PlaceholderPage title="Fuel Logs" />} />
-            <Route path="/analytics" element={<PlaceholderPage title="Analytics & Reports" />} />
+            <Route path="/drivers" element={<DriversPage />} />
+            <Route path="/trips" element={<TripsPage />} />
+            <Route path="/maintenance" element={<MaintenancePage />} />
+            <Route path="/fuel" element={<FuelLogsPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
           </Route>
           
           {/* Default redirect */}
