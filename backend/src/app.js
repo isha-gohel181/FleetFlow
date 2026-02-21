@@ -7,6 +7,7 @@
  * - All API routes
  * - Error handling middleware
  */
+
 const express = require('express');
 const cors = require('cors');
 
