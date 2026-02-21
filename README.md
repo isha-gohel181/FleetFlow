@@ -9,4 +9,6 @@ mail : psolanki131004@gmail.com
 
 
 Frontend:react.js, Tailwind CSS, shadcn UI
+
+
 Backend: node.js, express.js, mongoDB
