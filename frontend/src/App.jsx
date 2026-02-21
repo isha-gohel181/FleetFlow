@@ -1,25 +1,48 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+/**
+ * FleetFlow Main App Component
+ * Sets up routing and auth context
+ */
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { AppLayout, ProtectedRoute } from '@/components/layout';
+import { LoginPage, DashboardPage, VehiclesPage } from '@/pages';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome to Shadcn UI</CardTitle>
-          <CardDescription>
-            This card demonstrates shadcn/ui components with Tailwind CSS.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            If you can see this styled card and button, shadcn/ui is working properly!
-          </p>
-          <Button className="w-full">Click Me</Button>
-        </CardContent>
-      </Card>
-    </div>
-  )
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Protected routes with layout */}
+          <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/vehicles" element={<VehiclesPage />} />
+            {/* Placeholder routes for future pages */}
+            <Route path="/drivers" element={<PlaceholderPage title="Drivers Registry" />} />
+            <Route path="/trips" element={<PlaceholderPage title="Trip Management" />} />
+            <Route path="/maintenance" element={<PlaceholderPage title="Maintenance Logs" />} />
+            <Route path="/fuel" element={<PlaceholderPage title="Fuel Logs" />} />
+            <Route path="/analytics" element={<PlaceholderPage title="Analytics & Reports" />} />
+          </Route>
+          
+          {/* Default redirect */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+// Placeholder component for pages not yet implemented
+function PlaceholderPage({ title }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-[60vh]">
+      <h1 className="text-2xl font-semibold text-white mb-2">{title}</h1>
+      <p className="text-gray-400">This page is coming soon.</p>
+    </div>
+  );
+}
+
+export default App;
