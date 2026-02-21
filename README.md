@@ -7,6 +7,6 @@ mail : dhatripatel67@gmail.com
 3.Pooja Solanki
 mail : psolanki131004@gmail.com
 
-Frontend:
 
-Backend:
+Frontend:react.js, Tailwind CSS, shadcn UI
+Backend: node.js, express.js, mongoDB
